@@ -1,17 +1,17 @@
-x=5
-y=10
-z=x + y
+from flask import Flask, render_template
 
-a=3
-b=4
-c= a + b
-num1 = 100
-num2 = 200
-num3= num1 + num2
+# ✅ create app FIRST
+app = Flask(__name__)
 
+# ✅ THEN routes
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-def sum_values(x,y):
-    return x + y
-sum1 = sum_values(3,4)
-sum2 = sum_values(5,10)
-sum3 = sum_values(100,200)
+@app.route('/products')
+def products():
+    return render_template('products.html')
+
+# ✅ THEN run app
+if __name__ == "__main__":
+    app.run(debug=True)

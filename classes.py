@@ -100,7 +100,7 @@ Fuel Capacity: {self.fuel_capacity}
 Fuel Level: {self.fuel_level}
 Is Running: {self.is_running}
 """
-car = Car("Toyota", "Corolla", 2020, 50, 20)
+car = Car("subaru", "audi", 2026, 50, 20)
 
 print(car.display_car_info())
 
