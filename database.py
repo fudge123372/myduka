@@ -1,63 +1,120 @@
 import psycopg2
-#establishing connection to postgres
+
+#establishing connection to Postgres
 conn = psycopg2.connect(host='localhost',port=5432,user='postgres',password='1234',dbname='myduka')
-#object to perform database operations.
+
+#object to perform db operations
 cur = conn.cursor()
+
+#fetching products
 def get_products():
     cur.execute("select * from products")
     products = cur.fetchall()
     return products
 
-product_data = get_products()
-print(product_data)
 
+#fetching sales
 def get_sales():
     cur.execute("select * from sales")
     sales = cur.fetchall()
     return sales
 
-sales_data = get_sales()
-print(sales_data)
 
+#fetching stock
 def get_stock():
     cur.execute("select * from stock")
     stock = cur.fetchall()
-    print(stock)
+    return stock
+
+
+def get_data(table):
+    cur.execute(f"select * from {table}")
+    data = cur.fetchall()
+    return data
+
+
+def insert_products(product_details):
+    cur.execute(f"insert into products(name,buying_price,selling_price)values{product_details}")
+    conn.commit()
+
+product1 = ('milk',50,60)
+insert_products(product1)
+
+
+
+def insert_sale(sale_details):
+    cur.execute("insert into sales(pid,quantity)values(%s,%s)",(sale_details))
+    conn.commit()
+
+
+def insert_stock(stock_details):
+    cur.execute("insert into stock(pid,stock_quantity)values(%s,%s)",(stock_details))
+    conn.commit()
+
 
 def sales_per_product():
     cur.execute('''
-        SELECT 
-            products.name AS p_name,
-            SUM(sales.quantity * products.selling_price) AS total_sales
-        FROM sales
-        JOIN products ON products.id = sales.pid
-        GROUP BY products.name;
+                select products.name as p_name , sum(quantity * selling_price) as total_sales 
+                from sales join products on products.id = sales.pid group by p_name;
     ''')
-    return cur.fetchall()
+    sales_product = cur.fetchall()
+    return sales_product
+
+
 def sales_per_day():
-    cur.execute("""
-        select date(sales.created_at) as day,sum(sales.quantity * products.selling_price) as 
+    cur.execute('''
+        select date(sales.created_at) as day, sum(sales.quantity * products.selling_price) as 
         total_sales from products join sales on sales.pid = products.id group by day;
-    """)
+    ''')
     sales_day = cur.fetchall()
     return sales_day
 
+
+x = sales_per_day()
+print("Sales",x)
+
 def profit_per_product():
-    cur.execute("""
-        select products.name, sum((selling_price - buying_price) * quantity) as total_profit
-        from sales join products on products.id = sales.pid group by p.id;
-    """)
+    cur.execute('''
+        select products.name as p_name , sum((selling_price - buying_price) * quantity) as total_profit
+        from sales join products on sales.pid = products.id group by p_name;
+    ''')
     profit_product = cur.fetchall()
     return profit_product
+
+y  = profit_per_product()
+print("Profit per prod",y)
 
 def profit_per_day():
     cur.execute('''
         select date(sales.created_at) as day, sum((selling_price - buying_price) * quantity) as total_profit
-        from sales join products on products.id = sales p.id group by day;
+        from sales join products on sales.pid = products.id group by day;
     ''')
     profit_day = cur.fetchall()
     return profit_day
 
+# y = profit_per_day()
+# print("Profit",y)
+
+
+
+def available_stock(pid):
+    cur.execute("select sum(stock_quantity) from stock where pid = %s",(pid,))
+    total_stock = cur.fetchone()[0] or 0
+
+    cur.execute("select sum(quantity) from sales where pid = %s",(pid,))
+    total_sold = cur.fetchone()[0] or 0
+    return total_stock - total_sold
+
+
+def insert_user(user_details):
+    cur.execute("insert into users(full_name,email,phone_number,password)values(%s,%s,%s,%s)",user_details)
+    conn.commit()
+
+
+def check_user_exists(email):
+    cur.execute("select * from users where email = %s",(email,))
+    user_data = cur.fetchone()
+    return user_data
 
 
 
